@@ -55,3 +55,5 @@ CGE11: A energy-economy CGE model, considering the energy-KL bundle
 CGE12: A energy-economy-climate CGE model, adding the carbon accounting and carbon pricing module
 
 CGE14: A recursive-dynamic energy-economy-climate CGE model, adding the carbon accounting and carbon pricing module, using efficiency variable
+
+CGE_carbon_tax: add the carbon tax policy module
