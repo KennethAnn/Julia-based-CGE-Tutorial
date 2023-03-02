@@ -164,11 +164,15 @@ NumYears = 44
 
 gdpdir = joinpath(@__DIR__, "..", "data", "GDP_grov.csv")
 gdp =  CSV.read(gdpdir, DataFrames.DataFrame, header=1)
-gdp_trend = Matrix(gdp)[1:44, 3] ./100
+gdp_trend = Matrix(gdp)[1:NumYears, 3] ./100
 
-emitdir = joinpath(@__DIR__, "..", "data", "Emit_trend.csv")
-emit =  CSV.read(emitdir, DataFrames.DataFrame, header=1)
-emit_trend = Matrix(emit)[1:44, 2]
+tfpdir = joinpath(@__DIR__, "..", "data", "TFP_grov.csv")
+tfp =  CSV.read(tfpdir, DataFrames.DataFrame, header=1)
+tfp_bau = Matrix(tfp)[1:NumYears, 2]
+
+policydir = joinpath(@__DIR__, "..", "data", "carbon_policy.csv")
+policy =  CSV.read(policydir, DataFrames.DataFrame, header=1)
+ctax_policy = Matrix(policy)[1:NumYears, 5]
 
 lab_supp = zeros(Float32, NumYears, NumHouseholds)
 lab_supp[1,1:2] = ls
@@ -176,8 +180,6 @@ cap_supp = zeros(Float32, NumYears)
 cap_supp[1] = ks
 rgdp_bau = zeros(Float32, NumYears)
 rgdp_bau[1] = rgdp0
-tfp_bau = zeros(Float32, NumYears)
-tfp_bau[1] = 1
 for j in 2:NumYears
     tfp_bau[j] = tfp_bau[j-1] * 1.015
 end
@@ -252,7 +254,9 @@ function generate_CGE()
         # pgdp, (start=1)
     end
     @NLparameters m begin
-        cap == emit_trend[1]
+        # cap == emit_trend[1]
+        # define the parameter (exogenous tax)
+        ctax_exg == 0
         rgdp_exg == rgdp_bau[1]
         tfp_exg == tfp_bau[1]
         caps == cap_supp[1]
@@ -404,7 +408,12 @@ function generate_CGE()
     @mapping(m, eq_temit, temit - (sum(emit[i] for i in sectors) + sum(emith[h] for h in households)))
     @complementarity(m, eq_temit, temit)
    
-    @mapping(m, eq_pcarbon, cap - temit)
+    # set carbon cap
+    # @mapping(m, eq_pcarbon, cap - temit)
+    # @complementarity(m, eq_pcarbon, pcarbon)
+
+    # set carbon tax
+    @mapping(m, eq_pcarbon, pcarbon - ctax_exg)
     @complementarity(m, eq_pcarbon, pcarbon)
 
     @mapping(m, eq_etax[j in fens, i in sectors], etax[j, i] - emission_factor[i, j] * pcarbon)
@@ -419,11 +428,13 @@ function generate_CGE()
     @mapping(m, eq_emisrev, emisrev - sum(sum(etax[j, i] * qint[j, i] for j in fens) for i in sectors))
     @complementarity(m, eq_emisrev, emisrev)
 
-    @mapping(m, eq_rgdp_exg, rgdp_exg - rgdp_cs)
-    @complementarity(m, eq_rgdp_exg, tfp)
-
-    # @mapping(m, eq_rgdp_exg, tfp - tfp_exg)
+    # GDP-based dynamic mechanism
+    # @mapping(m, eq_rgdp_exg, rgdp_exg - rgdp_cs)
     # @complementarity(m, eq_rgdp_exg, tfp)
+
+    # TFP-based dynamic mechanism
+    @mapping(m, eq_rgdp_exg, tfp - tfp_exg)
+    @complementarity(m, eq_rgdp_exg, tfp)
 
     @mapping(m, eq_lambdal[i in sectors], lambdal[i] - tfp)
     @complementarity(m, eq_lambdal, lambdal)
@@ -441,16 +452,22 @@ function generate_CGE()
                 set_value(labs[h], lab_supp[t, h])
             end
             if scn == 1
-                # set_value(tfp_exg, tfp_bau[t])
-                set_value(rgdp_exg, rgdp_bau[t])
-                println("rgdp_exg: ",rgdp_exg)
-                set_value(cap, temit0 * 10)
+                # set TFP value for each year t
+                set_value(tfp_exg, tfp_bau[t])
+
+                # set_value(rgdp_exg, rgdp_bau[t])
+                # println("rgdp_exg: ",rgdp_exg)
+
+                # set the exogenous carbon cap, not used in the model on carbon tax
                 # set_value(cap, emit_trend[t])
+
+                # set the exogenous carbon tax for each year t
+                set_value(ctax_exg, ctax_policy[t])
             end
             solveMCP(m; convergence_tolerance=1e-8, output="yes", time_limit=6000)
             @show result_value(pk)
-            # @show result_value(walras)
             @show result_value(tfp)
+            @show value(ctax_exg)
 
             walras = result_value(savh[1]) + result_value(savh[2]) + result_value(savg) + aksav * result_value(pk) * cap_supp[t] - result_value(tinv) - result_value(er) * inve0
             println("walras value = ", walras)
