@@ -442,7 +442,7 @@ function generate_CGE()
     @mapping(m, eq_lambdak[i in sectors], lambdak[i] - tfp)
     @complementarity(m, eq_lambdak, lambdak)
 
-    result = DataFrame(scenario = String[], year = Int[], variable = String[], commodity = String[], sector = String[], subsector = String[], value = Float32[])
+    result = DataFrame(scenario = String[], year = Int[], variable = String[], commodity = String[], sector = String[], subsector = String[], unit = String[], value = Float32[])
     for scn in 1:1
         for t in 1:NumYears
             # Model Solver
@@ -485,36 +485,36 @@ function generate_CGE()
             # end
 
             for i in sectors
-                push!(result, (scnList[scn], years[t], "output", "", sector[i], "", result_value(prod[i])))
-                push!(result, (scnList[scn], years[t], "production cost", "", sector[i], "", result_value(pprodt[i])))
-                push!(result, (scnList[scn], years[t], "capital demand", "", sector[i], "", result_value(k[i])))
-                push!(result, (scnList[scn], years[t], "labor demand", "", sector[i], "", result_value(l[i])))
-                push!(result, (scnList[scn], years[t], "CO2", "", sector[i], "", result_value(emit[i])))
+                push!(result, (scnList[scn], years[t], "output", "", sector[i], "", "10 billion CNY", result_value(prod[i])))
+                push!(result, (scnList[scn], years[t], "production cost", "", sector[i], "", "1", result_value(pprodt[i])))
+                push!(result, (scnList[scn], years[t], "capital demand", "", sector[i], "", "10 billion CNY",result_value(k[i])))
+                push!(result, (scnList[scn], years[t], "labor demand", "", sector[i], "", "10 billion CNY", result_value(l[i])))
+                push!(result, (scnList[scn], years[t], "CO2", "", sector[i], "", "0.1 billion tons", result_value(emit[i])))
                 for j in ens
-                    push!(result, (scnList[scn], years[t], "energy demand", sector[j], sector[i], "", result_value(qint[j, i])))
+                    push!(result, (scnList[scn], years[t], "energy demand", sector[j], sector[i], "","10 billion CNY", result_value(qint[j, i])))
                 end
-                push!(result, (scnList[scn], years[t], "domestic demand", "", sector[i], "", result_value(dmd[i])))
-                push!(result, (scnList[scn], years[t], "commodity price", "", sector[i], "", result_value(parm[i])))
-                push!(result, (scnList[scn], years[t], "investment", "", sector[i], "", result_value(inv[i])))
-                push!(result, (scnList[scn], years[t], "government consumption", sector[i], "", "", result_value(consg[i])))
+                push!(result, (scnList[scn], years[t], "domestic demand", "", sector[i], "", "10 billion CNY", result_value(dmd[i])))
+                push!(result, (scnList[scn], years[t], "commodity price", "", sector[i], "", "1", result_value(parm[i])))
+                push!(result, (scnList[scn], years[t], "investment", "", sector[i], "", "10 billion CNY", result_value(inv[i])))
+                push!(result, (scnList[scn], years[t], "government consumption", sector[i], "", "", "10 billion CNY", result_value(consg[i])))
                 for h in households
-                    push!(result, (scnList[scn], years[t], "household consumption", sector[i], household[h], "", result_value(consh[i, h])))
+                    push!(result, (scnList[scn], years[t], "household consumption", sector[i], household[h], "", "10 billion CNY", result_value(consh[i, h])))
                 end
             end
             for h in households
-                push!(result, (scnList[scn], years[t], "CO2", "", household[h], "", result_value(emith[h])))
-                push!(result, (scnList[scn], years[t], "labor supply", "", household[h], "", value(labs[h])))
+                push!(result, (scnList[scn], years[t], "CO2", "", household[h], "", "0.1 billion tons", result_value(emith[h])))
+                push!(result, (scnList[scn], years[t], "labor supply", "", household[h], "", "10 billion CNY", value(labs[h])))
                 for j in ens
-                    push!(result, (scnList[scn], years[t], "energy demand", sector[j], household[h], "", result_value(consh[j, h])))
+                    push!(result, (scnList[scn], years[t], "energy demand", sector[j], household[h], "", "10 billion CNY", result_value(consh[j, h])))
                 end
             end
-            push!(result, (scnList[scn], years[t], "labor wage", "", "", "", result_value(pl)))
-            push!(result, (scnList[scn], years[t], "capital rent", "", "", "", result_value(pk)))
-            push!(result, (scnList[scn], years[t], "real gdp-va", "", "", "", result_value(rgdp_ps)))
-            push!(result, (scnList[scn], years[t], "real gdp-demand", "", "", "", result_value(rgdp_cs)))
-            push!(result, (scnList[scn], years[t], "total factor productivity", "", "", "", result_value(tfp)))
-            push!(result, (scnList[scn], years[t], "total CO2 emissions", "", "", "", result_value(temit)))
-            push!(result, (scnList[scn], years[t], "CO2 price", "", "", "", result_value(pcarbon)))
+            push!(result, (scnList[scn], years[t], "labor wage", "", "", "", "1",result_value(pl)))
+            push!(result, (scnList[scn], years[t], "capital rent", "", "", "", "1", result_value(pk)))
+            push!(result, (scnList[scn], years[t], "real gdp-va", "", "", "", "10 billion CNY", result_value(rgdp_ps)))
+            push!(result, (scnList[scn], years[t], "real gdp-demand", "", "", "", "10 billion CNY", result_value(rgdp_cs)))
+            push!(result, (scnList[scn], years[t], "total factor productivity", "", "", "", "1", result_value(tfp)))
+            push!(result, (scnList[scn], years[t], "total CO2 emissions", "", "", "", "0.1 billion tons", result_value(temit)))
+            push!(result, (scnList[scn], years[t], "CO2 price", "", "", "", "100 CNY", result_value(pcarbon)))
         end
     end
     return result
