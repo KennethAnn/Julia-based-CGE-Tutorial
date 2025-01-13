@@ -121,18 +121,14 @@ elasdir = joinpath(@__DIR__, "..", "data", "Elasticities.csv")
 elas = CSV.read(elasdir, DataFrames.DataFrame, header=1)
 
 # 2.2 Elasticities
-sigmap = elas[sectors, "sigmap"]
-sigmakel = elas[sectors, "sigmakel"]
-sigmakl = elas[sectors, "sigmakl"]
-sigmaene = elas[sectors, "sigmaene"]
-sigmafe = elas[sectors, "sigmafe"]
-sigmav = elas[54, "sigmav"]
-sigmam = elas[sectors, "sigmam"]
-sigmae = elas[sectors, "sigmae"]
-sigmaff = elas[sectors, "sigmaff"]
-sigmafes = elas[sectors, "sigmafes"]
-sigmanr = elas[sectors, "sigmanr"]
-eta = elas[sectors, "eta"]
+sigmap = elas[sectors, "sigmap"] # CES elasticity between intermediate goods and KEL bundle
+sigmakel = elas[sectors, "sigmakel"] # CES elasticity between capital-labor bundle and energy goods
+sigmakl = elas[sectors, "sigmakl"] # CES elasticity between capital and labor
+sigmaene = elas[sectors, "sigmaene"] # CES elasticity between fossil fuels and electricity
+sigmafe = elas[sectors, "sigmafe"] # CES elasticity between different fossil fuels
+sigmav = elas[54, "sigmav"] # CES elasticity for final investment aggregation
+sigmam = elas[sectors, "sigmam"] # CES elasticity between import goods and domestic goods with domestic production
+sigmae = elas[sectors, "sigmae"] # CET elasticity between export goods and domestic goods with domestic production
 
 # 2.3 Emissions
 emisdir = joinpath(@__DIR__, "..", "data", "Emissions2017.csv") # emission factors
